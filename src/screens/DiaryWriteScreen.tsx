@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
 import { useTheme } from '../ThemeContext';
-import { getEntry, saveEntry } from '../storage';
+import { getDiaryEntry, saveDiaryEntry } from '../storage';
 import { formatDateLabel } from '../dateUtils';
+import DismissKeyboardView from '../components/DismissKeyboardView';
 
 interface Props {
   date: string; // 'YYYY-MM-DD'
@@ -17,7 +18,7 @@ export default function DiaryWriteScreen({ date, onBack, onSaved }: Props) {
   useEffect(() => {
     let active = true;
     setText('');
-    getEntry(date).then((entry) => {
+    getDiaryEntry(date).then((entry) => {
       if (active && entry) setText(entry.body);
     });
     return () => {
@@ -27,12 +28,12 @@ export default function DiaryWriteScreen({ date, onBack, onSaved }: Props) {
 
   async function handleSave() {
     if (!text.trim()) return;
-    await saveEntry({ date, dateLabel: formatDateLabel(date), body: text });
+    await saveDiaryEntry(date, text);
     onSaved();
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+    <DismissKeyboardView style={[styles.container, { backgroundColor: colors.bg }]}>
       <Pressable onPress={onBack} style={styles.backRow}>
         <Text style={{ color: colors.sub, fontSize: 13 }}>‹ 캘린더로 돌아가기</Text>
       </Pressable>
@@ -52,7 +53,7 @@ export default function DiaryWriteScreen({ date, onBack, onSaved }: Props) {
           <Text style={{ color: colors.bg, fontSize: 14 }}>저장</Text>
         </Pressable>
       </View>
-    </View>
+    </DismissKeyboardView>
   );
 }
 

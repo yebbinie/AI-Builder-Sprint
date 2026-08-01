@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Pressable } from 'react-native';
 import { useTheme } from '../ThemeContext';
 import {
   letterMonthLabel as mockMonthLabel,
@@ -7,15 +7,16 @@ import {
   letterSignature as mockSignature,
 } from '../data/mockData';
 import { generateLetter } from '../pipeline/generateLetter';
-import { realSignalsJuly } from '../pipeline/realSignals';
-import { realEntriesJuly } from '../data/realEntries';
+import { julySignals } from '../pipeline/julySignals';
+import { julyDiary } from '../data/julyDiary';
 import { DiaryEntry, LetterParagraph } from '../types';
 
 interface Props {
-  onQuoteTap: (date: string) => void;
+onQuoteTap: (date: string, quote: string) => void;
+  onBack: () => void;
 }
 
-export default function LetterScreen({ onQuoteTap }: Props) {
+export default function LetterScreen({ onQuoteTap, onBack }: Props) {
   const { colors } = useTheme();
   const [monthLabel, setMonthLabel] = useState(mockMonthLabel);
   const [paragraphs, setParagraphs] = useState<LetterParagraph[]>(mockParagraphs);
@@ -24,10 +25,10 @@ export default function LetterScreen({ onQuoteTap }: Props) {
 
   useEffect(() => {
     let cancelled = false;
-    const getRealEntry = async (date: string): Promise<DiaryEntry | null> =>
-      realEntriesJuly[date] ?? null;
+    const getJulyEntry = async (date: string): Promise<DiaryEntry | null> =>
+      julyDiary[date] ?? null;
 
-    generateLetter(realSignalsJuly, '2026년 7월', getRealEntry, '2026-07-real-test')
+    generateLetter(julySignals, '2026년 7월', getJulyEntry, '2026-07-julydiary')
       .then((result) => {
         if (cancelled) return;
         if (result.paragraphs.length > 0) {
@@ -57,6 +58,9 @@ export default function LetterScreen({ onQuoteTap }: Props) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      <Pressable onPress={onBack} style={styles.backRow}>
+        <Text style={{ color: colors.sub, fontSize: 13 }}>‹ 홈으로</Text>
+      </Pressable>
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
         <Text style={[styles.month, { color: colors.sub }]}>{monthLabel}</Text>
         {paragraphs.map((para, i) => (
@@ -65,7 +69,7 @@ export default function LetterScreen({ onQuoteTap }: Props) {
               seg.type === 'quote' ? (
                 <Text
                   key={j}
-                  onPress={() => onQuoteTap(seg.date)}
+                  onPress={() => onQuoteTap(seg.date, seg.content)}
                   style={[styles.quote, { color: colors.accent, borderBottomColor: colors.accent }]}
                 >
                   {seg.content}
@@ -85,6 +89,7 @@ export default function LetterScreen({ onQuoteTap }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, paddingTop: 52, paddingHorizontal: 26, paddingBottom: 26 },
   centerLoading: { alignItems: 'center', justifyContent: 'center' },
+  backRow: { marginBottom: 16},
   scroll: { flex: 1 },
   month: { fontFamily: 'GowunBatang_400Regular', fontSize: 13, textAlign: 'center', marginBottom: 26 },
   paragraph: { fontFamily: 'GowunBatang_400Regular', fontSize: 15.5, lineHeight: 31, marginBottom: 22 },

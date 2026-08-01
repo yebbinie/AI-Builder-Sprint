@@ -6,13 +6,22 @@ import { DiaryEntry } from '../types';
 interface Props {
   entry: DiaryEntry;
   fromLetter: boolean;
+  quote?: string;
   onBack: () => void;
 }
 
-export default function DiaryDetailScreen({ entry, fromLetter, onBack }: Props) {
+export default function DiaryDetailScreen({ entry, fromLetter, quote, onBack }: Props) {
   const { colors } = useTheme();
-  const showHighlight = fromLetter && entry.highlight && entry.body.includes(entry.highlight);
-  const parts = showHighlight ? entry.body.split(entry.highlight as string) : [entry.body];
+  // 편지에서 탭한 인용문(quote)은 verify.ts가 원문 존재를 이미 보장한 값이라 우선 사용.
+  // 목데이터 스켈레톤은 highlight 필드가 편지 인용문과 손으로 다르게 쓰여 있어 quote가 안 맞을 수 있어 폴백 유지.
+  const highlightText =
+    fromLetter && quote && entry.body.includes(quote)
+      ? quote
+      : fromLetter && entry.highlight && entry.body.includes(entry.highlight)
+        ? entry.highlight
+        : undefined;
+  const showHighlight = !!highlightText;
+  const parts = showHighlight ? entry.body.split(highlightText as string) : [entry.body];
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
@@ -24,7 +33,7 @@ export default function DiaryDetailScreen({ entry, fromLetter, onBack }: Props) 
         {showHighlight ? (
           <>
             <Text>{parts[0]}</Text>
-            <Text style={{ backgroundColor: colors.mark }}>{entry.highlight}</Text>
+            <Text style={{ backgroundColor: colors.mark }}>{highlightText}</Text>
             <Text>{parts[1]}</Text>
           </>
         ) : (
