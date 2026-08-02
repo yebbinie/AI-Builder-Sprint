@@ -23,34 +23,40 @@ export const letterParagraphs: LetterParagraph[] = [
   { segments: [{ type: 'text', content: '잘 지내고 있으려나.' }] },
   {
     segments: [
-      { type: 'text', content: '한동안 ' },
-      { type: 'quote', content: '잠을 못 잔다', date: '2026-07-05' },
-      { type: 'text', content: '고 자주 썼는데, 뒤로 갈수록 그 얘기가 없어졌더라. 언제 괜찮아졌는지는 나도 모르겠어. 그냥 어느 날부터 안 썼어. 그런 것들은 늘 그렇게 지나가나 봐.' },
+      { type: 'quote', content: '잠이 잘 안 온다', date: '2026-07-06' },
+      { type: 'text', content: '는 말을 한동안 자주 썼는데 뒤로 갈수록 그 얘기가 싹 사라졌어. 언제부터였는지는 나도 잘 몰라. 그냥 어느 날부터 안 썼더라고.' },
     ],
   },
   {
     segments: [
-      { type: 'quote', content: '날씨 좋다', date: '2026-07-09' },
-      { type: 'text', content: '는 말은 참 여러 번 썼더라. 벤치에 고양이가 두 마리 앉아 있었다는 것까지 굳이 적어놨던데, 그런 걸 적어두는 사람이구나 싶어서 좀 웃었어.' },
+      { type: 'text', content: '힘들다고 잔뜩 쓰던 무렵이었지. ' },
+      { type: 'quote', content: '자료 폴더만 만들어놨다', date: '2026-07-06' },
+      { type: 'text', content: '고 툭 던져놨네.' },
     ],
   },
   {
     segments: [
-      { type: 'quote', content: '면접 보고 온 날', date: '2026-07-12' },
-      { type: 'text', content: '은 여섯 글자로 끝냈더라. 저녁에 먹은 라면 얘기가 더 길었어. 며칠 전만 해도 사람 만나는 게 부담이라고 써놓고선. 별거 아니라고 생각했겠지. 근데 나는 그날이 제일 좋았어.' },
+      { type: 'text', content: '누우면 보고서 생각만 가득해서 잠이 안 온다고 난리였잖아. ' },
+      { type: 'quote', content: '보고서 초안 다 썼다', date: '2026-07-13' },
+      { type: 'text', content: '는 한 줄을 보니까 그제야 마음이 놓여.' },
     ],
   },
   {
     segments: [
-      { type: 'quote', content: '붙었다는 소식', date: '2026-07-24' },
-      { type: 'text', content: ' 듣고 얼떨떨하다는 말을 세 번이나 한 것도, 시장에서 ' },
-      { type: 'quote', content: '복숭아 한 박스', date: '2026-07-26' },
-      { type: 'text', content: ' 사 와서 두 개는 그 자리에서 먹었다는 것도 다 읽었어. 그런 문장으로 한 달이 끝나는 것도 나쁘지 않네.' },
+      { type: 'text', content: '지갑을 잃어버렸다고 정신없어 하던 날이 있었어. 그네 타다가 옆에 떨어뜨렸던 ' },
+      { type: 'quote', content: '지갑 찾았다', date: '2026-07-25' },
+      { type: 'text', content: '는 걸 보니 다행이었지.' },
     ],
   },
   {
-    segments: [{ type: 'text', content: '다음 달의 너는 이걸 잊고 있을 텐데, 그래도 한 번은 읽어줬으면 좋겠다.' }],
+    segments: [
+      { type: 'quote', content: '엄마가 옥수수', date: '2026-07-01' },
+      { type: 'text', content: ' 삶아줬다는 것도 있고 ' },
+      { type: 'quote', content: '냉면이랑 만두 먹었다', date: '2026-07-11' },
+      { type: 'text', content: '는 것도 적혀 있네. 별일 없던 날들이 제일 많았나 봐.' },
+    ],
   },
+  { segments: [{ type: 'text', content: '다음 달의 너는 이걸 잊고 있을 텐데, 그래도 한 번은 읽어줬으면 좋겠다.' }] },
 ];
 
 export const letterSignature = '— 7월의 나로부터';

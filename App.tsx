@@ -67,10 +67,6 @@ function AppInner() {
   }
 
   async function handleSelectDay(day: number) {
-    if (day === 1) {
-      setScreen('envelope');
-      return;
-    }
     const date = `2026-07-${String(day).padStart(2, '0')}`;
     const saved = await getDiaryEntry(date);
     if (saved || julyDiary[date] || entries[date]) {
@@ -79,7 +75,6 @@ function AppInner() {
       setDiaryQuote(null);
       setScreen('diary');
     } else {
-      // 안 쓴 날: "놓쳤다"가 아니라 "아직 안 썼다" — 그 날짜 일기 쓰기 화면으로 이동 (plan.md §7 [2])
       setWriteDate(date);
       setScreen('write');
     }

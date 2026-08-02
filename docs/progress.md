@@ -364,3 +364,61 @@ npx tsx src/pipeline/testJulyDiary.ts
 ### 파일 위치
 - `src/pipeline/assemble.ts` — 프롬프트와 검증 로직 다 여기 있음
 - `src/pipeline/fixtures/july-signals.json` — 지금 신호 데이터 (9개, good_day/unspoken_effort/repeated/resolved)
+
+## 2026-08-01 (최종) — hyelim 병합, 버그 수정, Gemini API 전환. 개발 완료
+
+### hyelim 브랜치 병합
+- 날짜 하드코딩 해결 (`todayDateString()` 실제 `new Date()` 기반 계산)
+- `storage.ts` 함수명 통일: `getEntry`/`saveEntry` → `getDiaryEntry`/`saveDiaryEntry`, `deleteDiaryEntry` 신규 추가
+- 편지 인용 하이라이트 버그 수정: `LetterScreen` → `App.tsx` → `DiaryDetailScreen`으로 `quote` 값 전달, 실제 원문과 대조해서 하이라이트
+- `react-native-svg` 설치, 아이콘(`MailIcon`/`CalendarIcon`)·봉투 삼각 플랩 SVG 적용
+- 캘린더 `storage.ts` 실데이터 연동 (`getEntriesForMonth` 호출)
+- 충돌 4개 파일(`App.tsx`, `HomeScreen.tsx`, `LetterScreen.tsx`, `progress.md`) 수동 병합
+
+### 오늘 발견·수정한 버그
+- **캘린더 요일/날짜 줄바꿈 버그**: `flexWrap` 반올림 오차로 토요일이 다음 줄로 밀림 → 요일을 별도 `dowRow`로 분리, 날짜는 `flexWrap` 대신 7개씩 명시적 `weeks` 배열로 렌더링
+- **캘린더 점 표시 누락**: `demoWrittenDays` 계산에 `julyDiary`가 빠져있어서 7/31 등 일부 날짜에 점이 안 찍힘 → 추가
+- **`DiaryWriteScreen` 키보드 미해제**: `DismissKeyboardView`로 감싸서 해결 (이전에 `HomeScreen`, `OcrReviewScreen`에는 이미 적용돼 있었는데 이 화면만 누락)
+- **죽은 코드 정리**: `CalendarScreen.tsx`에서 안 쓰는 `realEntriesJuly` import 및 참조 제거
+
+### 지문/PIN 인증 구현
+- `expo-local-authentication` 설치, `LockScreen`에서 실제 지문/Face ID 인증 호출
+- 지문 미등록·미지원 또는 인증 실패/취소 시 자동으로 PIN 화면(`PinScreen.tsx` 신규)으로 전환
+- PIN은 최초 1회 설정(설정→확인 2단계) 후 검증만. `storage.ts`에 `getPin`/`setPin` 추가
+
+### 편지 조립 파이프라인 — API 전환 및 대대적 재설계
+
+**API 전환: Upstage(`solar-pro3`) → Gemini(`gemini-3.5-flash-lite`)**
+- 이유: Upstage 가산점은 이미 OCR에서 확보했고, `solar-pro3`는 지시 준수력이 낮아 편지 품질 문제가 계속 발생. Gemini 무료 티어(하루 20회 등, 모델별로 다름)로 충분히 커버 가능
+- 주의: Gemini 모델명이 자주 바뀜. `gemini-2.5-flash`, `gemini-2.5-flash-lite`, `gemini-3-flash` 등은 신규 사용자에게 404 남. **`-latest` 접미사가 붙은 별칭(`gemini-flash-lite-latest` 등)이나, 실제 사용 가능 모델은 `GET https://generativelanguage.googleapis.com/v1beta/models?key=키`로 직접 확인 필요**
+- `thinkingConfig: { thinkingBudget: 0 }` 옵션은 `flash-lite` 모델에서 400 에러남(지원 안 함) — thinking 모델(`flash-latest` 등)에서만 사용 가능. 안 쓰는 게 지금은 더 안정적
+- `.env`에 `EXPO_PUBLIC_GEMINI_API_KEY` 추가 (기존 `EXPO_PUBLIC_UPSTAGE_API_KEY`는 OCR용으로 유지)
+
+**assemble.ts 구조 전면 재설계 (사람2 작업)**
+기존엔 quote 문장 전체를 그대로 재료로 줘서, 모델이 "통째로 붙여넣고 설명 덧붙이기"밖에 못 하는 근본적 한계가 있었음. 이를 해결하기 위해:
+1. **① 핵심 조각 추출**: 신호별 quote에서 LLM으로 짧은 핵심 조각(4~14자)을 먼저 뽑음 (원문의 부분 문자열이어야 함, 코드 백업 로직 있음)
+2. **② 조립**: 조립 LLM에는 문장 전체가 아니라 조각만 줌 → 통째로 붙여넣기가 물리적으로 불가능해짐. 문단 계획(`buildPlan`)도 코드가 카테고리별로 미리 짜서 제공 (날짜 나열 방지, 최대 인용 수 제한)
+3. **③ 조각 링크**: 편지 본문에서 조각이 등장하는 위치를 찾아 인용으로 표시, `date` 연결
+
+**검증을 critical(치명적) / minor(사소함)로 분리**
+- critical: 존댓말, 지어낸 내용(예시 복사, 참고맥락 유출), 인용 부족 등 — 하나라도 있으면 무조건 재시도
+- minor: 어미 반복 등 문체 문제 — 일정 횟수(POLISH_UNTIL) 넘으면 그냥 사용
+- 재시도 다 실패해도(MAX_ATTEMPT) 지금까지 중 가장 점수 높았던 결과를 사용 — **예외를 던져서 mock 편지로 떨어지는 최악의 상황을 원천 차단**
+
+**오늘 발견한 사실 왜곡 사례 2건 (중요, 계속 주의 필요)**
+1. "엄마가"를 "아빠가"로 바꿔 씀 — 최종 결과에선 quote 자체는 정확했으나 앞의 설명 문장에 오염 있었음
+2. **resolved 카테고리에서 "가방 구석에서 지갑 찾았다"고 지어냄** — 실제 원문은 "그네 타다가 옆에 떨어뜨렸다"였음. `context`가 너무 짧아서("지갑을 잃어버렸다……" 한 줄) 모델이 빈 부분을 상상으로 채운 것으로 추정.
+   → **해결**: `july-signals.json`의 resolved 항목 `context`를 원문의 구체적 사실까지 포함하도록 구체화 ("그네 타다가 옆에 떨어뜨렸던 것"). 재시도 후 정상화 확인.
+   → **교훈**: `extract.ts`에서 resolved/faded의 context를 만들 때 짧게 요약하지 말고 구체적 사실을 담아야 함. 모델에게 "빈 공간"을 주면 지어낼 위험이 있음 — 이건 프롬프트로 100% 못 막고, 데이터 자체를 구체적으로 주는 게 근본 해결책.
+
+**한글 변수명 버그 수정**: `최고`→`best`, `오케이`→`ok` (사람2 코드에 남아있던 디버그용 한글 변수, 그대로 두면 ReferenceError)
+
+### 확인 완료 (실기기/웹)
+- 지문 인증 → 홈 → 캘린더 → 봉투 → 편지 → 인용 탭 → 하이라이트 → 뒤로가기 → OCR 저장 → 캘린더 확인 → 안 쓴 날 쓰기, 전체 경로 정상 작동
+- 인용 하이라이트 실제 원문과 정확히 일치 확인
+- 캘린더 요일/날짜 정렬 정상
+
+### 남은 것 (있다면 여기 기록)
+- `faded` 카테고리는 로직은 완성됐으나 현재 실데이터엔 해당 사례가 없어 실전 검증 안 됨. 다른 데이터로 테스트 시 확인 필요
+- Gemini 무료 티어 일일 한도(모델별 상이, 20~250회 수준)에 유의 — 발표 당일엔 이미 캐시된 결과를 쓰므로 문제없으나, 발표 직전 추가 테스트 시 한도 소진 주의
+- 편지 사실 왜곡은 프롬프트/검증으로 상당 부분 잡히지만 100% 보장 안 됨 — **발표용 최종 데이터 확정 후, 팀원 전원이 편지 본문을 한 번씩 읽고 사실관계를 직접 확인하는 절차 필수**
